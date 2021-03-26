@@ -4,7 +4,8 @@ from copy import copy
 
 
 class CipherSuite(Enum):
-    Caesar = "Caesar"
+    Caesar = "Caesar",
+    Vigener = "Vigener"
 
 
 class Message:
@@ -35,6 +36,7 @@ class Encryptor:
     def encrypt(self) -> Message:  ###will be write in the sons
         pass
 
+
 class Decryptor:
     def __init__(self):
         self.message = Message()
@@ -44,7 +46,6 @@ class Decryptor:
 
     def decrypt(self) -> Message:  ###will be write in the sons
         pass
-
 
 
 class CaesarEncryptor(Encryptor):
@@ -111,7 +112,6 @@ class CaesarDecryptor(Decryptor):
         super(CaesarDecryptor, self).__init__()
         self.shift = shift
 
-
     def fit(self, mess):
         self.message = mess
         # self.message.params['TypeEncoder'] = CipherSuite.Caesar
@@ -142,9 +142,74 @@ class CaesarDecryptor(Decryptor):
         distances.sort()
 
         targetShift = 26 - distances[0][1]
-        #print('shift = {}'.format(targetShift))
+        # print('shift = {}'.format(targetShift))
         decr = CaesarDecryptor(targetShift)
         decr.fit(message)
         return decr.decrypt()
 
-#class Vigener
+
+class VigenerEncryptor(Encryptor):
+    def __init__(self, keyword):
+        super(VigenerEncryptor, self).__init__()
+        self.keyword = keyword
+        self.table = [['a'] * 26 for i in range(26)]
+        for i in range(26):
+            for j in range(26):
+                self.table[i][j] = chr(ord('a') + (i + j) % 26)
+
+    def fit(self, mess):
+        super(VigenerEncryptor, self).fit(mess)
+
+    def encrypt(self) -> Message:
+        text = []
+        id = 0
+        for i in self.message.text:
+            if i.isalpha():
+                row = ord(self.keyword[id % len(self.keyword)].lower()) - ord('a')
+                col = ord(i.lower()) - ord('a')
+                ch = self.table[row][col]
+                if i.isupper():
+                    ch = ch.upper()
+                text.append(ch)
+                id += 1
+            else:
+                text.append(i)
+        text = ''.join(text)
+        return Message(text, True, Keyword=self.keyword, TypeEncoder=CipherSuite.Vigener)
+
+
+class VigenerDecryptor(Decryptor):
+    def __init__(self, keyword):
+        super(VigenerDecryptor, self).__init__()
+        self.keyword = keyword
+        self.table = [['a'] * 26 for i in range(26)]
+        for i in range(26):
+            for j in range(26):
+                self.table[i][j] = chr(ord('a') + (i + j) % 26)
+
+
+    def fit(self, mess):
+        self.message = mess
+
+    def decrypt(self) -> Message:
+        text = []
+        id = 0
+        for i in self.message.text:
+            if i.isalpha():
+                row = ord(self.keyword[id % len(self.keyword)].lower()) - ord('a')
+                #col = ord(i.lower()) - ord('a')
+                col = 0
+                for j in range(26):
+                    if self.table[row][j] == i.lower():
+                        col = j
+                        break
+                ch = chr(ord('a') + col)
+                if i.isupper():
+                    ch = ch.upper()
+                text.append(ch)
+                id += 1
+            else:
+                text.append(i)
+        text = ''.join(text)
+        return Message(text, False)
+
