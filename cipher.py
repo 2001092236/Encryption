@@ -1,11 +1,13 @@
 from enum import Enum
 from math import sqrt
 from copy import copy
+from math import *
 
 
 class CipherSuite(Enum):
     Caesar = "Caesar",
     Vigener = "Vigener"
+    Vernam = "Vernam"
 
 
 class Message:
@@ -67,7 +69,7 @@ class CaesarEncryptor(Encryptor):
         self.shift = shift
 
     def fit(self, mess):
-        super().fit(mess)
+        super(CaesarEncryptor, self).fit(mess)
         # self.message.params['TypeEncoder'] = CipherSuite.Caesar
         # self.message.params['Shift'] = self.shift
 
@@ -113,7 +115,7 @@ class CaesarDecryptor(Decryptor):
         self.shift = shift
 
     def fit(self, mess):
-        self.message = mess
+        super(CaesarDecryptor, self).fit(mess)
         # self.message.params['TypeEncoder'] = CipherSuite.Caesar
         # self.message.params['Shift'] = self.shift
 
@@ -150,6 +152,9 @@ class CaesarDecryptor(Decryptor):
 
 class VigenerEncryptor(Encryptor):
     def __init__(self, keyword):
+        for i in keyword:
+            if not i.isalpha():
+                raise Exception("Wrong keyword. It should contains only characters!!!")
         super(VigenerEncryptor, self).__init__()
         self.keyword = keyword
         self.table = [['a'] * 26 for i in range(26)]
@@ -180,6 +185,9 @@ class VigenerEncryptor(Encryptor):
 
 class VigenerDecryptor(Decryptor):
     def __init__(self, keyword):
+        for i in keyword:
+            if not i.isalpha():
+                raise Exception("Wrong keyword. It should contains only characters!!!")
         super(VigenerDecryptor, self).__init__()
         self.keyword = keyword
         self.table = [['a'] * 26 for i in range(26)]
@@ -187,9 +195,8 @@ class VigenerDecryptor(Decryptor):
             for j in range(26):
                 self.table[i][j] = chr(ord('a') + (i + j) % 26)
 
-
     def fit(self, mess):
-        self.message = mess
+        super(VigenerDecryptor, self).fit(mess)
 
     def decrypt(self) -> Message:
         text = []
@@ -197,7 +204,7 @@ class VigenerDecryptor(Decryptor):
         for i in self.message.text:
             if i.isalpha():
                 row = ord(self.keyword[id % len(self.keyword)].lower()) - ord('a')
-                #col = ord(i.lower()) - ord('a')
+                # col = ord(i.lower()) - ord('a')
                 col = 0
                 for j in range(26):
                     if self.table[row][j] == i.lower():
@@ -213,3 +220,82 @@ class VigenerDecryptor(Decryptor):
         text = ''.join(text)
         return Message(text, False)
 
+
+class VernamEncryptor(Encryptor):
+    def __init__(self, keyword):
+        for i in keyword:
+            if not i.isalpha():
+                raise Exception("Wrong keyword. It should contains only characters!!!")
+
+        self.alphabet = [chr(x) for x in range(ord('a'), ord('z') + 1)]
+        self.alphabet += [chr(x) for x in range(ord('а'), ord('а') + 6)]
+        self.alphabet = ''.join(self.alphabet)
+        super(VernamEncryptor, self).__init__()
+        self.keyword = ''.join(keyword)
+
+    def fit(self, mess):
+        cnt = 0
+        for i in mess.text:
+            if i.isalpha():
+                cnt += 1
+        if cnt != len(self.keyword):
+            raise Exception("Wrong message. It's length should be equal {}".format(len(self.keyword)))
+        super(VernamEncryptor, self).fit(mess)
+
+    def encrypt(self) -> Message:
+        text = []
+        id = 0
+        for i in self.message.text:
+            if i.isalpha():
+                j = self.keyword[id]
+                ch = self.alphabet[self.alphabet.index(i.lower()) ^ self.alphabet.index(j.lower())]
+
+                if i.isupper():
+                    ch = ch.upper()
+
+                text.append(ch)
+                id += 1
+            else:
+                text.append(i)
+        text = ''.join(text)
+
+        return Message(text, True, Keyword=self.keyword, TypeEncoder=CipherSuite.Vernam)
+
+
+class VernamDecryptor(Decryptor):
+    def __init__(self, keyword):
+        for i in keyword:
+            if not i.isalpha():
+                raise Exception("Wrong keyword. It should contains only characters!!!")
+        super(VernamDecryptor, self).__init__()
+        self.keyword = ''.join(keyword)
+
+        self.alphabet = [chr(x) for x in range(ord('a'), ord('z') + 1)]
+        self.alphabet += [chr(x) for x in range(ord('а'), ord('а') + 6)]
+        self.alphabet = ''.join(self.alphabet)
+
+
+    def fit(self, mess):
+        cnt = 0
+        for i in mess.text:
+            if self.alphabet.count(i.lower()) != 0:
+                cnt += 1
+        if cnt != len(self.keyword):
+            raise Exception("Wrong message. It's length(in characters) should be equal {}".format(len(self.keyword)))
+        super(VernamDecryptor, self).fit(mess)
+
+    def decrypt(self) -> Message:
+        text = []
+        id = 0
+        for i in self.message.text:
+            if self.alphabet.count(i.lower()) != 0:
+                j = self.keyword[id]
+                ch = self.alphabet[self.alphabet.index(i.lower()) ^ self.alphabet.index(j.lower())]
+                if i.isupper():
+                    ch = ch.upper()
+                text.append(ch)
+                id += 1
+            else:
+                text.append(i)
+        text = ''.join(text)
+        return Message(text, False)
