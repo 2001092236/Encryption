@@ -158,6 +158,12 @@ text = fin.read()
 
 mess = Message(text)
 
+if args.mode == 'Hack':
+    fout.write(CaesarDecryptor.decryptWithoutKey(mess).text)
+    fin.close()
+    fout.close()
+    exit(0)
+
 if args.typeCipher == 'Caesar':
     enc = CaesarEncryptor(int(args.my_dict['shift']))
     dec = CaesarDecryptor(int(args.my_dict['shift']))
