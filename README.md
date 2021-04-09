@@ -21,3 +21,9 @@ from command line run:
    
 6) If you want to decrypt with Vernam cipher with parameter keyword:
    python3 main.py --mode=Dec --path_from=<file_to_decrypt> --path_to=<file_to_write_unciphred> --typeCipher=Vernam --params 'keyword'=<keyword>
+   
+7) If you want to encrypt with Gronsfeld cipher with parameter digits:
+   python3 main.py --mode=Enc --path_from=<file_to_encrypt> --path_to=<file_to_decrypt> --typeCipher=Gronsfeld --params 'digits'=<digits>
+   
+8) If you want to decrypt with Gronsfeld cipher with parameter digits:
+   python3 main.py --mode=Dec --path_from=<file_to_decrypt> --path_to=<file_to_write_unciphred> --typeCipher=Gronsfeld --params 'digits'=<digits>

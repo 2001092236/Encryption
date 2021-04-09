@@ -8,6 +8,7 @@ class CipherSuite(Enum):
     Caesar = "Caesar",
     Vigener = "Vigener"
     Vernam = "Vernam"
+    Grossfeld = "Gronsfeld"
 
 
 class Message:
@@ -35,7 +36,7 @@ class Encryptor:
     def fit(self, mess):
         self.message = mess
 
-    def encrypt(self) -> Message:  ###will be write in the sons
+    def encrypt(self) -> Message:
         pass
 
 
@@ -46,7 +47,7 @@ class Decryptor:
     def fit(self, mess):
         self.message = mess
 
-    def decrypt(self) -> Message:  ###will be write in the sons
+    def decrypt(self) -> Message:
         pass
 
 
@@ -70,8 +71,6 @@ class CaesarEncryptor(Encryptor):
 
     def fit(self, mess):
         super(CaesarEncryptor, self).fit(mess)
-        # self.message.params['TypeEncoder'] = CipherSuite.Caesar
-        # self.message.params['Shift'] = self.shift
 
     def encrypt(self) -> Message:
         text = []
@@ -116,8 +115,6 @@ class CaesarDecryptor(Decryptor):
 
     def fit(self, mess):
         super(CaesarDecryptor, self).fit(mess)
-        # self.message.params['TypeEncoder'] = CipherSuite.Caesar
-        # self.message.params['Shift'] = self.shift
 
     def decrypt(self) -> Message:
         text = []
@@ -144,7 +141,6 @@ class CaesarDecryptor(Decryptor):
         distances.sort()
 
         targetShift = 26 - distances[0][1]
-        # print('shift = {}'.format(targetShift))
         decr = CaesarDecryptor(targetShift)
         decr.fit(message)
         return decr.decrypt()
@@ -204,7 +200,6 @@ class VigenerDecryptor(Decryptor):
         for i in self.message.text:
             if i.isalpha():
                 row = ord(self.keyword[id % len(self.keyword)].lower()) - ord('a')
-                # col = ord(i.lower()) - ord('a')
                 col = 0
                 for j in range(26):
                     if self.table[row][j] == i.lower():
@@ -274,7 +269,6 @@ class VernamDecryptor(Decryptor):
         self.alphabet += [chr(x) for x in range(ord('а'), ord('а') + 6)]
         self.alphabet = ''.join(self.alphabet)
 
-
     def fit(self, mess):
         cnt = 0
         for i in mess.text:
@@ -297,5 +291,69 @@ class VernamDecryptor(Decryptor):
                 id += 1
             else:
                 text.append(i)
+        text = ''.join(text)
+        return Message(text, False)
+
+
+### TWO ADDITIONAL CIPHERS
+
+
+class GronsfeldEncryptor(Encryptor):
+    def nxt(ch, cnt=1):
+        num = ord(ch)
+        if ord('A') <= num <= ord('Z'):
+            L = ord('A')
+            R = ord('Z')
+        if ord('a') <= num <= ord('z'):
+            L = ord('a')
+            R = ord('z')
+
+        num_in_alf = num - L + cnt
+        num_in_alf %= (R - L + 1)
+        return chr(num_in_alf + L)
+
+    def __init__(self, str_of_digits):
+        super(GronsfeldEncryptor, self).__init__()
+        if not str_of_digits.isdigit():
+            raise Exception("Wrong key. It should be a string of digits!!!")
+        self.digits = list(map(int, list(str_of_digits)))
+
+    def fit(self, mess):
+        super(GronsfeldEncryptor, self).fit(mess)
+
+    def encrypt(self) -> Message:
+        text = []
+        id = 0
+        for i in self.message.text:
+            id %= len(self.digits)
+            if i.isalpha():
+                text.append(GronsfeldEncryptor.nxt(i, self.digits[id]))
+            else:
+                text.append(i)
+            ++id
+        text = ''.join(text)
+        return Message(text, True, digits=self.digits, TypeEncoder=CipherSuite.Grossfeld)
+
+
+class GronsfeldDecryptor(Decryptor):
+    def __init__(self, str_of_digits):
+        super(GronsfeldDecryptor, self).__init__()
+        if not str_of_digits.isdigit():
+            raise Exception("Wrong key. It should be a string of digits!!!")
+        self.digits = list(map(int, list(str_of_digits)))
+
+    def fit(self, mess):
+        super(GronsfeldDecryptor, self).fit(mess)
+
+    def decrypt(self) -> Message:
+        text = []
+        id = 0
+        for i in self.message.text:
+            id %= len(self.digits)
+            if i.isalpha():
+                text.append(GronsfeldEncryptor.nxt(i, -self.digits[id]))
+            else:
+                text.append(i)
+            ++id
         text = ''.join(text)
         return Message(text, False)

@@ -176,6 +176,10 @@ if args.typeCipher == 'Vernam':
     enc = VernamEncryptor(args.my_dict['keyword'])
     dec = VernamDecryptor(args.my_dict['keyword'])
 
+if args.typeCipher == 'Gronsfeld':
+    enc = GronsfeldEncryptor(args.my_dict['digits'])
+    dec = GronsfeldDecryptor(args.my_dict['digits'])
+
 if args.mode == 'Enc':
     obj = enc
 
