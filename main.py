@@ -151,18 +151,45 @@ parcer.add_argument('--params', dest="my_dict", action=StoreDictKeyPair, nargs="
 
 args = parcer.parse_args()
 
+if args.typeCipher == 'Stega':
+    img_path = args.my_dict['image_path']
+    img = Image.open(img_path)
+    new_img = None
+
+    if args.mode == 'Enc':
+        fin = open(args.path_from, 'r')
+        text = fin.read()
+        mess = Message(text)
+
+        enc = StegaEncryptor(img)
+        enc.fit(mess)
+        new_img = enc.encrypt()
+        new_img.save(args.path_to + "/ciphred_img.png", "PNG")
+        exit(0)
+    else:
+        fout = open(args.path_to, 'w')
+        dec = StegaDecryptor(img)
+        sz = 50
+        if 'mess_length' in args.my_dict:
+            sz = int(args.my_dict['mess_length'])
+        dec.fit(sz)
+        mess = dec.decrypt()
+        fout.write(mess.text)
+        exit(0)
+
+
 fin = open(args.path_from, 'r')
 fout = open(args.path_to, 'w')
 
 text = fin.read()
 
 mess = Message(text)
-
 if args.mode == 'Hack':
     fout.write(CaesarDecryptor.decryptWithoutKey(mess).text)
     fin.close()
     fout.close()
     exit(0)
+
 
 if args.typeCipher == 'Caesar':
     enc = CaesarEncryptor(int(args.my_dict['shift']))
@@ -179,6 +206,7 @@ if args.typeCipher == 'Vernam':
 if args.typeCipher == 'Gronsfeld':
     enc = GronsfeldEncryptor(args.my_dict['digits'])
     dec = GronsfeldDecryptor(args.my_dict['digits'])
+
 
 if args.mode == 'Enc':
     obj = enc

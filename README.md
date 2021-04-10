@@ -22,8 +22,16 @@ from command line run:
 6) If you want to decrypt with Vernam cipher with parameter keyword:
    python3 main.py --mode=Dec --path_from=<file_to_decrypt> --path_to=<file_to_write_unciphred> --typeCipher=Vernam --params 'keyword'=<keyword>
    
+###ADDITIONAL CIPHERS:
 7) If you want to encrypt with Gronsfeld cipher with parameter digits:
    python3 main.py --mode=Enc --path_from=<file_to_encrypt> --path_to=<file_to_decrypt> --typeCipher=Gronsfeld --params 'digits'=<digits>
    
 8) If you want to decrypt with Gronsfeld cipher with parameter digits:
    python3 main.py --mode=Dec --path_from=<file_to_decrypt> --path_to=<file_to_write_unciphred> --typeCipher=Gronsfeld --params 'digits'=<digits>
+   
+9) If you want to encrypt with Stega cipher with parameter Image:
+   python3 main.py --mode=Enc --path_from=<file_to_encrypt> --path_to=<dir_to_put_image> --typeCipher=Stega --params 'image_path'=<path_to_image>
+   
+10) If you want to decrypt with Stega cipher with parameter Image:
+   python3 main.py --mode=Dec --path_to=<file_to_write_unciphred> --typeCipher=Stega --params 'image_path'=<path_to_image> 'mess_length' = <length_of_message(default = 50)>
+   

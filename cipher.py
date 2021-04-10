@@ -2,6 +2,7 @@ from enum import Enum
 from math import sqrt
 from copy import copy
 from math import *
+from PIL import Image, ImageDraw
 
 
 class CipherSuite(Enum):
@@ -357,3 +358,63 @@ class GronsfeldDecryptor(Decryptor):
             ++id
         text = ''.join(text)
         return Message(text, False)
+
+
+class HillEncryptor(Encryptor):
+
+
+### STEGANOGRAPHY
+
+class StegaEncryptor(Encryptor):
+
+    def __init__(self, img):
+        super(StegaEncryptor, self).__init__()
+        self.img = img
+
+    def fit(self, mess):
+        super(StegaEncryptor, self).fit(mess)
+
+    def encrypt(self) -> Image:
+        W = self.img.size[0]
+        H = self.img.size[1]
+        pix = self.img.load()
+        new_img = copy(self.img)
+        draw = ImageDraw.Draw(new_img)
+        x = 0
+        y = 0
+        for elem in self.message.text:
+            numb = ord(elem)
+            g, b = pix[(x, y)][1:3]
+            draw.point((x, y), (numb, g, b))
+            x += 1
+            if x >= H:
+                x = 0
+                y += 1
+        return new_img
+
+
+class StegaDecryptor(Decryptor):
+    def __init__(self, img, mess_length=25):
+        super(StegaDecryptor, self).__init__()
+        self.mess_length = 25
+        self.img = img
+
+    def fit(self, mess_length=None):
+        if mess_length is not None:
+            self.mess_length = mess_length
+
+    def decrypt(self) -> Message:
+        W = self.img.size[0]
+        H = self.img.size[1]
+        pix = self.img.load()
+        x = 0
+        y = 0
+        text = []
+        for i in range(self.mess_length):
+            numb = pix[(x, y)][0]
+            text += chr(numb)
+            x += 1
+            if x >= H:
+                x = 0
+                y += 1
+        return Message(''.join(text))
