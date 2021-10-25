@@ -1,4 +1,6 @@
 # Encryption
+
+The program allows you to encrypt and decrypt sentences using a number of crypto-algorithms.
 How to use:
 from command line run:
 
